@@ -77,6 +77,20 @@ public enum CG {
     }()
 }
 
+/// Multi-line display title at the design's line height (1.12 em). Charis SIL's own line height
+/// is 1.64 em and SwiftUI can't set a negative line spacing, so the lines are stacked instead.
+struct DisplayTitle: View {
+    let lines: [Text]
+    let size: CGFloat
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: size * (1.12 - 1.64)) {
+            ForEach(lines.indices, id: \.self) { lines[$0] }
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
 struct CardStyle: ViewModifier {
     var tint: Color? = nil
     func body(content: Content) -> some View {

@@ -15,10 +15,10 @@ struct WelcomeView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            (Text("Welcome").font(CG.serifItalic(46, bold: true)) + Text(" to\nCampus\nGuard."))
+            DisplayTitle(lines: [Text("Welcome").font(CG.serifItalic(46, bold: true)) + Text(" to"),
+                                 Text("Campus"), Text("Guard.")], size: 46)
                 .font(CG.display(46, weight: .regular))
                 .foregroundStyle(CG.cardinal)
-                .lineSpacing(2)
                 .padding(.top, 24)
                 .accessibilityAddTraits(.isHeader)
 

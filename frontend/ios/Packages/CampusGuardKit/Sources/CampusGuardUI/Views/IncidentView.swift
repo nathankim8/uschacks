@@ -62,9 +62,8 @@ private struct AlarmPage: View {
         let disarming = model.link.pending?.command == .disarm
         VStack(alignment: .leading, spacing: 0) {
             ViewSwitch(page: .red, onDark: true, go: go)
-            Text(lost ? "Device\nlost" : "Motion\ndetected")
+            DisplayTitle(lines: lost ? [Text("Device"), Text("lost")] : [Text("Motion"), Text("detected")], size: 48)
                 .font(CG.display(48))
-                .lineSpacing(2)
                 .shadow(color: Color(red: 0.24, green: 0, blue: 0).opacity(0.35), radius: 1.5, y: 2)
                 .padding(.top, 32)
                 .accessibilityAddTraits(.isHeader)
@@ -161,9 +160,8 @@ private struct RecoverPage: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 ViewSwitch(page: .white, onDark: false, go: go)
-                Text(lost ? "Device\nlost" : "Motion\nDetected")
+                DisplayTitle(lines: lost ? [Text("Device"), Text("lost")] : [Text("Motion"), Text("Detected")], size: 48)
                     .font(CG.display(48))
-                    .lineSpacing(2)
                     .foregroundStyle(CG.cardinal)
                     .padding(.top, 32)
                     .accessibilityAddTraits(.isHeader)

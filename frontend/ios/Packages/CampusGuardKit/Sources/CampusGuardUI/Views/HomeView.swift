@@ -10,16 +10,12 @@ struct HomeView: View {
         let protected = model.isProtected
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Group {
-                    if protected {
-                        Text("You’ve ") + Text("left").font(CG.serifItalic(46, bold: true)) + Text("\nyour bag")
-                    } else {
-                        Text("Your bag is\n") + Text("with you").font(CG.serifItalic(46, bold: true))
-                    }
-                }
+                DisplayTitle(lines: protected
+                    ? [Text("You’ve ") + Text("left").font(CG.serifItalic(46, bold: true)), Text("your bag")]
+                    : [Text("Your bag is"), Text("with you").font(CG.serifItalic(46, bold: true))],
+                    size: 46)
                 .font(CG.display(46, weight: .regular))
                 .foregroundStyle(CG.cardinal)
-                .lineSpacing(2)
                 .frame(minHeight: 116, alignment: .topLeading)
                 .contentTransition(.interpolate)
                 .animation(.smooth, value: protected)
