@@ -64,8 +64,9 @@ private struct AlarmPage: View {
             ViewSwitch(page: .red, onDark: true, go: go)
             Text(lost ? "Device\nlost" : "Motion\ndetected")
                 .font(CG.display(48))
-                .shadow(color: .black.opacity(0.35), radius: 2, y: 2)
-                .padding(.top, 28)
+                .lineSpacing(2)
+                .shadow(color: Color(red: 0.24, green: 0, blue: 0).opacity(0.35), radius: 1.5, y: 2)
+                .padding(.top, 32)
                 .accessibilityAddTraits(.isHeader)
 
             Button {
@@ -99,7 +100,7 @@ private struct AlarmPage: View {
 
             if model.usesTag, model.link.lastFailure == .noConfirmation, !model.busy {
                 Button("Close on this phone only (the tag may still be sounding)") { model.dismissLocally() }
-                    .font(.caption).underline()
+                    .font(CG.sans(12)).underline()
                     .foregroundStyle(.white.opacity(0.85))
                     .padding(.bottom, 12)
             }
@@ -160,10 +161,11 @@ private struct RecoverPage: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 ViewSwitch(page: .white, onDark: false, go: go)
-                Text(lost ? "Device\nlost" : "Motion\ndetected")
+                Text(lost ? "Device\nlost" : "Motion\nDetected")
                     .font(CG.display(48))
+                    .lineSpacing(2)
                     .foregroundStyle(CG.cardinal)
-                    .padding(.top, 28)
+                    .padding(.top, 32)
                     .accessibilityAddTraits(.isHeader)
 
                 if model.snapshot.lostMode && model.usesTag {
@@ -182,7 +184,7 @@ private struct RecoverPage: View {
                     Text(model.findMyConfigured
                          ? "No sightings yet. Find My reports need iPhones passing near the bag and arrive minutes later."
                          : "No sightings yet. Alert pins show where your phone was when an alarm arrived.")
-                        .font(.footnote).foregroundStyle(CG.muted).padding(.top, 12)
+                        .font(CG.sans(13)).foregroundStyle(CG.muted).padding(.top, 12)
                 } else {
                     VStack(spacing: 2) {
                         ForEach(Array(pts.prefix(12).enumerated()), id: \.element.id) { i, p in
@@ -272,11 +274,11 @@ private struct RecoverPage: View {
                     else if let at = fm.fetchedAt { Text("Find My network · updated \(relative(at))") }
                     else { Text("Asking the Find My network…") }
                 }
-                .font(.caption)
+                .font(CG.sans(12))
                 .foregroundStyle(CG.muted)
                 Spacer()
                 Button { Task { await model.refreshFindMy() } } label: { Image(systemName: "arrow.clockwise") }
-                    .font(.caption)
+                    .font(CG.sans(12))
                     .disabled(fm.loading)
                     .accessibilityLabel("Refresh Find My locations")
             }
@@ -289,9 +291,9 @@ private struct RecoverPage: View {
                 Circle().frame(width: 6, height: 6)
                 VStack(alignment: .leading, spacing: 1) {
                     (Text(p.date.formatted(date: .omitted, time: .shortened)).bold() + Text(" · \(relative(p.date))"))
-                        .font(.callout)
+                        .font(CG.sans(16))
                     Text("\(p.kind == .findMy ? "Find My network" : "Your phone at the alert")\(p.accuracy.map { " · ±\(Int($0)) m" } ?? "")")
-                        .font(.caption2)
+                        .font(CG.sans(11))
                         .opacity(0.75)
                 }
                 Spacer()
@@ -316,7 +318,7 @@ private struct RecoverPage: View {
             } label: {
                 Label(ringing ? "stop nearby sound" : "play nearby sound",
                       systemImage: ringing ? "speaker.wave.3.fill" : "speaker.slash.fill")
-                    .font(.system(size: 21, design: .serif).italic())
+                    .font(CG.serifItalic(21))
                     .symbolEffect(.variableColor.iterative, isActive: ringing)
             }
             .buttonStyle(.plain)
@@ -325,7 +327,7 @@ private struct RecoverPage: View {
             Text(model.usesTag
                  ? (ringing ? "Sent to your tag. Listen for the siren (up to ~7 s)." : "Rings the siren on your tag.")
                  : "Plays on this phone, not on the tag.")
-                .font(.caption2)
+                .font(CG.sans(11))
                 .foregroundStyle(CG.muted)
                 .padding(.leading, 34)
         }

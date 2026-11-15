@@ -24,7 +24,7 @@ struct SettingsView: View {
                         triggerRow(.manual, "Manual", "Open the red screen; tap the bell to play sound", "hand.raised.fill")
                     }
                     Text("The tag always sounds its own siren when it alarms.")
-                        .font(.caption2).foregroundStyle(CG.muted)
+                        .font(CG.sans(11)).foregroundStyle(CG.muted)
                 }
 
                 section("This phone") {
@@ -41,12 +41,12 @@ struct SettingsView: View {
                             Label("Notifications", systemImage: "bell.badge")
                             Spacer()
                             Text(Notifier.shared.authorized ? "On" : "Off").foregroundStyle(CG.muted)
-                            Image(systemName: "chevron.right").font(.caption).foregroundStyle(CG.muted)
+                            Image(systemName: "chevron.right").font(CG.sans(12)).foregroundStyle(CG.muted)
                         }
                     }
                     .buttonStyle(.plain)
                     Text("iOS pauses apps in the background. For lock-screen alerts when Campus Guard is closed, also subscribe to your tag's topic in the ntfy app.")
-                        .font(.caption2).foregroundStyle(CG.muted)
+                        .font(CG.sans(11)).foregroundStyle(CG.muted)
                 }
 
                 section("Trojan Network") {
@@ -54,12 +54,16 @@ struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Find My locations")
                             Text("Your tag's beacon is located by iPhones passing by. Locations appear on the tracking screen.")
-                                .font(.caption2).foregroundStyle(CG.muted)
+                                .font(CG.sans(11)).foregroundStyle(CG.muted)
                         }
                     }
                 }
 
                 section("More") {
+                    NavigationLink { ActivityView() } label: {
+                        row("Activity", "list.bullet.rectangle", detail: model.link.history.isEmpty ? "" : "\(model.link.history.count)")
+                    }
+                    Divider()
                     NavigationLink { ConnectionView(onboarding: false) } label: {
                         row("Connection", "antenna.radiowaves.left.and.right", detail: model.isConfigured ? "Set up" : "Not set up")
                     }
@@ -86,13 +90,13 @@ struct SettingsView: View {
                     .font(.title2)
                     .foregroundStyle(CG.crimson)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Your bag tag").font(.subheadline.weight(.semibold))
+                    Text("Your bag tag").font(CG.sans(15, .semibold))
                     if model.isConfigured { LinkStatusLine() }
-                    else { Text("Not set up").font(.caption).foregroundStyle(CG.muted) }
+                    else { Text("Not set up").font(CG.sans(12)).foregroundStyle(CG.muted) }
                 }
                 Spacer()
                 Button("Reconnect") { model.restartSetup() }
-                    .font(.caption.weight(.semibold))
+                    .font(CG.sans(12, .semibold))
                     .padding(.horizontal, 12).padding(.vertical, 8)
                     .overlay(Capsule().strokeBorder(CG.hairline))
                     .foregroundStyle(CG.cardinal)
@@ -105,7 +109,7 @@ struct SettingsView: View {
                     toolButton("Test alert", "bell.badge", .pushTest)
                 }
                 if let fw = model.snapshot.firmware {
-                    Text("Firmware \(fw)").font(.caption2).foregroundStyle(CG.muted)
+                    Text("Firmware \(fw)").font(CG.sans(11)).foregroundStyle(CG.muted)
                 }
             }
         }
@@ -116,7 +120,7 @@ struct SettingsView: View {
         Button { Task { await model.run(command) } } label: {
             VStack(spacing: 6) {
                 Image(systemName: icon).font(.title3)
-                Text(title).font(.caption2.weight(.semibold))
+                Text(title).font(CG.sans(11, .semibold))
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
@@ -133,8 +137,8 @@ struct SettingsView: View {
             HStack(spacing: 14) {
                 Image(systemName: icon).foregroundStyle(on ? CG.crimson : CG.muted).frame(width: 24)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.subheadline.weight(.semibold))
-                    Text(detail).font(.caption).foregroundStyle(CG.muted)
+                    Text(title).font(CG.sans(15, .semibold))
+                    Text(detail).font(CG.sans(12)).foregroundStyle(CG.muted)
                 }
                 Spacer()
                 Image(systemName: on ? "largecircle.fill.circle" : "circle")
@@ -151,7 +155,7 @@ struct SettingsView: View {
 
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(title).font(.subheadline.weight(.semibold))
+            Text(title).font(CG.sans(15, .semibold))
             content()
         }
         .cgCard()
@@ -161,8 +165,8 @@ struct SettingsView: View {
         HStack {
             Label(title, systemImage: icon)
             Spacer()
-            Text(detail).foregroundStyle(CG.muted).font(.footnote)
-            Image(systemName: "chevron.right").font(.caption).foregroundStyle(CG.muted)
+            Text(detail).foregroundStyle(CG.muted).font(CG.sans(13))
+            Image(systemName: "chevron.right").font(CG.sans(12)).foregroundStyle(CG.muted)
         }
         .foregroundStyle(CG.ink)
         .contentShape(.rect)

@@ -21,6 +21,7 @@ public struct RootView: View {
             }
         }
         .animation(.smooth, value: model.phase)
+        .font(CG.sans(16))
         .tint(CG.cardinal)
         .onChange(of: scenePhase, initial: true) { _, phase in
             switch phase {
@@ -40,9 +41,6 @@ struct MainTabs: View {
         TabView {
             Tab("Home", systemImage: "house") {
                 NavigationStack { HomeView() }
-            }
-            Tab("Activity", systemImage: "list.bullet.rectangle") {
-                NavigationStack { ActivityView() }
             }
             Tab("Settings", systemImage: "gearshape") {
                 NavigationStack { SettingsView() }
