@@ -108,8 +108,9 @@ private struct AlarmPage: View {
             }
 
             HStack(alignment: .bottom) {
-                Button(disarming ? "Disarming…" : "It’s me") {
-                    Task { await model.itsMe() }
+                // A lost bag is "Found"; a motion alarm is "It's me". Both stop the alarm.
+                Button(disarming ? "Disarming…" : (lost ? "Found" : "It’s me")) {
+                    Task { lost ? await model.found() : await model.itsMe() }
                 }
                 .buttonStyle(SerifLinkStyle(size: 28))
                 .disabled(disarming)

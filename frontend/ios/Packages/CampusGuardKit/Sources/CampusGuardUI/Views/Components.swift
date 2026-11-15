@@ -76,6 +76,7 @@ struct LinkStatusLine: View {
         case .pushTest: "test"
         case .lostMode: "lost mode"
         case .found: "found"
+        case .automatic, .manual: "trigger mode"
         default: c.rawValue.lowercased()
         }
     }

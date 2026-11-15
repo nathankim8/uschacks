@@ -75,6 +75,7 @@ private struct ActivityRow: View {
         case .siren: "Siren on"
         case .stop: "Siren off"
         case .wifiBack: "Back online"
+        case .trigger: "Trigger mode"
         case .boot: "Tag restarted"
         case .unknown, .info: "Message"
         }
@@ -90,6 +91,7 @@ private struct ActivityRow: View {
         case .siren, .chirp, .test: "speaker.wave.2.fill"
         case .stop: "speaker.slash.fill"
         case .wifiBack, .boot, .status: "antenna.radiowaves.left.and.right"
+        case .trigger: "bolt.fill"
         case .unknown, .info: "text.bubble"
         }
     }

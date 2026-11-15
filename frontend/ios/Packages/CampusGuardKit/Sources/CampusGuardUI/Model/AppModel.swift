@@ -182,6 +182,7 @@ public final class AppModel {
     public func finishSetup(linked: Bool) {
         tagLinked = linked && isConfigured
         phase = .ready
+        syncTriggerMode()
         // Setup always lands on Home; an alarm that is still sounding re-opens itself below.
         if tagLinked, link.snapshot.mode == .alarm, let at = link.snapshot.lastAlarmAt,
            Date().timeIntervalSince(at) < TagTiming.freshAlarmWindow {
@@ -229,9 +230,9 @@ public final class AppModel {
         openIncident(.motion, page: .red)
         Haptics.alarm()
         Notifier.shared.post("Campus Guard: ALARM",
-                             settings.trigger == .manual
-                                ? "Someone is taking or going through your bag. Open to sound the alarm on your phone."
-                                : "Someone is taking or going through your bag! The tag's siren is on.",
+                             report.status.siren == false
+                                ? "Someone is taking or going through your bag. Open Campus Guard to sound the alarm."
+                                : "Someone is taking or going through your bag! The siren on your bag is on.",
                              kind: .alarm, id: "alarm-\(report.id)")
         Task { await dropPin(at: report.date) }
     }
@@ -254,17 +255,13 @@ public final class AppModel {
         } else {
             incident = Incident(reason: reason, startedAt: Date(), page: page)
         }
-        if page == .red { soundRedPage() }
+        // The bell mirrors the bag's siren: on in Automatic mode, off in Manual until pressed.
+        tagSirenOn = link.snapshot.sirenOn
     }
 
     public func show(_ page: Incident.Page) {
         incident?.page = page
-        if page == .white { stopPhoneSiren() } else { soundRedPage() }
-    }
-
-    /// The red page plays the phone alarm by itself (unless Settings › Alarm sound is off).
-    private func soundRedPage() {
-        if settings.phoneSound && !phoneSirenOn { startPhoneSiren() }
+        if page == .white { stopPhoneSiren() }
     }
 
     private func closeIncident() {
@@ -300,7 +297,23 @@ public final class AppModel {
     public private(set) var tagSirenOn = false
 
     /// The red page's bell is "on" while the bag's siren is (or, without a tag, the phone's).
-    public var bellActive: Bool { usesTag ? (tagSirenOn || link.snapshot.sirenOn) : phoneSirenOn }
+    public var bellActive: Bool { usesTag ? tagSirenOn : phoneSirenOn }
+
+    /// Settings › Trigger alarm. Tells the tag, which keeps the mode across restarts.
+    public func setTrigger(_ value: AlertTrigger) async {
+        let previous = settings.trigger
+        settings.trigger = value
+        guard usesTag else { return }
+        await run(value == .automatic ? .automatic : .manual)
+        if link.lastFailure != nil { settings.trigger = previous }   // tag didn't confirm: keep the old mode
+    }
+
+    /// After connecting, make the tag's mode match the app's (tags start in Automatic).
+    private func syncTriggerMode() {
+        let wantAutomatic = settings.trigger == .automatic
+        guard usesTag, (link.snapshot.automaticTrigger ?? true) != wantAutomatic else { return }
+        Task { await run(wantAutomatic ? .automatic : .manual) }
+    }
 
     public func toggleTagSiren() async {
         guard usesTag else { return togglePhoneSiren() }

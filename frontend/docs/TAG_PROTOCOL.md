@@ -46,6 +46,8 @@ ntfy.sh (or a self-hosted ntfy), two topics:
 | `SIREN` | Siren on ("Ring my bag") | none | `siren` |
 | `STOP` | Siren off | none | `stop` |
 | `PING` | Version | none (`PONG v10…` on UDP/Serial only) | `status` |
+| `AUTO` | Trigger mode automatic (default; saved on the tag) | `Trigger: automatic.` | – |
+| `MANUAL` | Trigger mode manual: theft alerts without the siren; the app's bell sends `SIREN` | `Trigger: manual.` | – |
 
 The app changes screens **only when the confirmation arrives** (timeout 20 s, or 270 s while
 the ESP32 is in lost mode and only reads commands at check-ins). Commands without a baseline
@@ -58,7 +60,8 @@ The app matches the first words, case-insensitively, so later wording can change
 
 | Starts with | Meaning | State the app infers |
 |---|---|---|
-| `ALARM` | theft detected, siren on (priority urgent) | armed, siren on |
+| `ALARM` | theft detected (priority urgent). Automatic mode: "…Siren is on." Manual mode: "…Siren is off." | armed; siren on unless the text says "siren is off" |
+| `Trigger` | AUTO / MANUAL done | trigger mode |
 | `Armed` | ARM done | armed, siren off |
 | `Disarmed` + `lost mode off` / `found` | FOUND (or DISARM while lost) | normal, siren off, lost off |
 | `Disarmed` | DISARM done | normal, siren off, lost off |

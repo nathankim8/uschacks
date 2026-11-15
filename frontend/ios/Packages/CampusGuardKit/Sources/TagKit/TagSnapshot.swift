@@ -20,6 +20,9 @@ public struct TagSnapshot: Equatable, Sendable, Codable {
     /// The tag has shown it has a lost mode (ESP32 tag_lostmode). The Pico tag never does,
     /// so the app hides LOSTMODE/FOUND for it.
     public var supportsLostMode = false
+    /// Trigger mode the tag last reported: true = automatic siren, false = manual, nil = unknown
+    /// (firmware before the trigger feature always behaves as automatic).
+    public var automaticTrigger: Bool?
 
     public init() {}
 
@@ -66,7 +69,7 @@ public struct TagSnapshot: Equatable, Sendable, Codable {
 
         switch report.event {
         case .alarm:
-            sirenOn = true
+            if report.status.siren == nil { sirenOn = true }
             if armed == nil { armed = true }
             lastAlarmAt = report.date
         case .armed:
@@ -85,6 +88,8 @@ public struct TagSnapshot: Equatable, Sendable, Codable {
             if report.status.siren == nil { sirenOn = false }
         case .siren:
             if report.status.siren == nil { sirenOn = true }
+        case .trigger:
+            automaticTrigger = report.text.lowercased().contains("automatic")
         case .status, .test, .chirp, .wifiBack, .boot, .unknown, .info:
             break
         }

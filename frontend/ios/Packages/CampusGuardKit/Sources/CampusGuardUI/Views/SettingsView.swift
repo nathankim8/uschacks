@@ -20,18 +20,12 @@ struct SettingsView: View {
 
                 section("Trigger alarm") {
                     VStack(spacing: 8) {
-                        triggerRow(.automatic, "Automatic", "Play sound on this phone when the tag alarms", "bolt.fill")
-                        triggerRow(.manual, "Manual", "Open the red screen; tap the bell to play sound", "hand.raised.fill")
+                        triggerRow(.automatic, "Automatic", "Your bag sounds its siren as soon as it detects movement", "bolt.fill")
+                        triggerRow(.manual, "Manual", "The red screen opens quietly; tap the bell to sound your bag", "hand.raised.fill")
                     }
-                    Text("The tag always sounds its own siren when it alarms.")
-                        .font(CG.sans(11)).foregroundStyle(CG.muted)
                 }
 
                 section("This phone") {
-                    Toggle(isOn: $model.settings.phoneSound) {
-                        Label("Alarm sound", systemImage: "speaker.wave.2.fill")
-                    }
-                    Divider()
                     Button {
                         #if os(iOS)
                         if let url = URL(string: "app-settings:") { openURL(url) }
@@ -133,7 +127,7 @@ struct SettingsView: View {
 
     private func triggerRow(_ value: AlertTrigger, _ title: String, _ detail: String, _ icon: String) -> some View {
         let on = model.settings.trigger == value
-        return Button { model.settings.trigger = value } label: {
+        return Button { Task { await model.setTrigger(value) } } label: {
             HStack(spacing: 14) {
                 Image(systemName: icon).foregroundStyle(on ? CG.crimson : CG.muted).frame(width: 24)
                 VStack(alignment: .leading, spacing: 2) {

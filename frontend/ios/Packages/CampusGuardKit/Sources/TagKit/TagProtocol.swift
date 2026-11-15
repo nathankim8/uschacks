@@ -19,6 +19,10 @@ public enum TagCommand: String, CaseIterable, Sendable, Codable {
     case siren = "SIREN"
     case chirp = "CHIRP"
     case ping = "PING"
+    /// Trigger mode: the tag sounds its siren as soon as it detects theft.
+    case automatic = "AUTO"
+    /// Trigger mode: the tag stays quiet on theft; the app's bell sends SIREN.
+    case manual = "MANUAL"
 
     /// Text POSTed to the command topic. Request ids are only sent to firmware that
     /// understands them (v10 and earlier treat "ARM ab12" as an unknown command).
@@ -39,6 +43,7 @@ public enum TagCommand: String, CaseIterable, Sendable, Codable {
         case .chirp: return structured ? [.chirp] : nil
         case .siren: return structured ? [.siren] : nil
         case .stop: return structured ? [.stop] : nil
+        case .automatic, .manual: return [.trigger]
         }
     }
 }
@@ -51,6 +56,8 @@ public enum TagEvent: String, Sendable, Codable, CaseIterable {
     case status, test, chirp, siren, stop
     case wifiBack = "wifi_back"
     case boot, unknown
+    /// "Trigger: automatic." / "Trigger: manual." (answer to AUTO / MANUAL).
+    case trigger
     /// Text the app could not classify (still shown in the activity log).
     case info
 }
@@ -162,7 +169,9 @@ public enum TagMessageParser {
     /// so small wording changes after the first word keep working.
     public static func classify(_ text: String) -> (event: TagEvent, status: TagStatusBits) {
         let m = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if m.hasPrefix("alarm") { return (.alarm, .init(armed: true, siren: true)) }
+        // Manual trigger mode: "ALARM: … Siren is off." (the tag waits for the app's bell).
+        if m.hasPrefix("alarm") { return (.alarm, .init(armed: true, siren: !m.contains("siren is off"))) }
+        if m.hasPrefix("trigger") { return (.trigger, .init()) }
         if m.hasPrefix("armed") { return (.armed, .init(armed: true, siren: false)) }
         if m.hasPrefix("disarmed") {
             if m.contains("lost mode off") || m.contains("found") {

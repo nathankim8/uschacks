@@ -63,6 +63,8 @@ enum TagKitCases {
             ("Test alert from your Campus Guard Tag.", .test, .init()),
             ("Lost mode ON: Find My beacon starting. The tag checks in about every 3 min.", .lostModeOn, .init(lost: true)),
             ("Lost mode check-in: the tag is near your hotspot. Send FOUND to end lost mode.", .checkIn, .init(lost: true)),
+            ("ALARM: someone is taking or going through your bag! Siren is off.", .alarm, .init(armed: true, siren: false)),
+            ("Trigger: manual.", .trigger, .init()),
             ("Something new", .info, .init()),
         ]
         for (text, event, status) in cases {
@@ -102,6 +104,19 @@ enum TagKitCases {
         check(TagCommand.ping.confirmingEvents(structured: true) == [.status])
         check(TagCommand.disarm.confirmingEvents(structured: false) == [.disarmed, .found])
         check(TagCommand.siren.confirmingEvents(structured: false) == nil)
+        check(TagCommand.automatic.wire() == "AUTO" && TagCommand.manual.wire() == "MANUAL")
+        check(TagCommand.manual.confirmingEvents(structured: false) == [.trigger])
+
+        // Manual trigger mode: alarm without the siren, then the bell turns it on.
+        var manual = TagSnapshot()
+        check(manual.automaticTrigger == nil)
+        manual.apply(TagMessageParser.parse(Msg.make("Trigger: manual.", ago: 30)))
+        check(manual.automaticTrigger == false)
+        manual.apply(TagMessageParser.parse(Msg.make("Armed. Your bag is protected.", ago: 20)))
+        manual.apply(TagMessageParser.parse(Msg.make("ALARM: someone is taking your bag! Siren is off.", ago: 10)))
+        check(!manual.sirenOn && manual.lastAlarmAt != nil, "manual alarm keeps the siren off")
+        manual.apply(TagMessageParser.parse(Msg.make("Trigger: automatic.", ago: 5)))
+        check(manual.automaticTrigger == true)
     }
 
     // MARK: Snapshot
