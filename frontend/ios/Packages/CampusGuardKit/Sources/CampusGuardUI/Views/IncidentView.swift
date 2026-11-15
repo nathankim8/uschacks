@@ -168,7 +168,7 @@ private struct RecoverPage: View {
                 DisplayTitle(lines: lost ? [Text("Device lost")] : [Text("Motion"), Text("Detected")], size: 48)
                     .font(CG.display(48))
                     .foregroundStyle(CG.cardinal)
-                    .padding(.top, 32)
+                    .padding(.top, 20)
                     .accessibilityAddTraits(.isHeader)
 
                 if model.snapshot.lostMode && model.usesTag {
@@ -176,10 +176,10 @@ private struct RecoverPage: View {
                 }
 
                 map(pts)
-                    .frame(height: 260)
+                    .frame(height: 240)
                     .clipShape(.rect(cornerRadius: 24))
                     .overlay(RoundedRectangle(cornerRadius: 24).strokeBorder(CG.hairline))
-                    .padding(.top, 20)
+                    .padding(.top, 16)
 
                 findMyStatus.padding(.top, 10)
 
@@ -190,12 +190,12 @@ private struct RecoverPage: View {
                         .font(CG.sans(13)).foregroundStyle(CG.muted).padding(.top, 12)
                 } else {
                     // Latest four by default; "Show all" expands to the full list (capped at 30).
-                    let shown = showAllSightings ? Array(pts.prefix(30)) : Array(pts.prefix(4))
+                    let shown = showAllSightings ? Array(pts.prefix(30)) : Array(pts.prefix(3))
                     VStack(alignment: .leading, spacing: 2) {
                         ForEach(Array(shown.enumerated()), id: \.element.id) { i, p in
                             sightingRow(p, emphasized: i < 2)
                         }
-                        if pts.count > 4 {
+                        if pts.count > 3 {
                             Button {
                                 withAnimation(.snappy) { showAllSightings.toggle() }
                             } label: {
@@ -207,15 +207,15 @@ private struct RecoverPage: View {
                                     .contentShape(.rect)
                             }
                             .buttonStyle(.plain)
-                            .accessibilityHint(showAllSightings ? "Shows only the latest four sightings" : "Shows every sighting")
+                            .accessibilityHint(showAllSightings ? "Shows only the latest three sightings" : "Shows every sighting")
                         }
                     }
                     .padding(.top, 12)
                 }
 
-                ringButton.padding(.top, 20)
+                ringButton.padding(.top, 12)
 
-                LinkStatusLine().padding(.top, 24)
+                LinkStatusLine().padding(.top, 14)
 
                 HStack(alignment: .bottom) {
                     Button { go(.red) } label: { Text("⟵ active") }
