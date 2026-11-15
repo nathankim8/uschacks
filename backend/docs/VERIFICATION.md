@@ -14,9 +14,15 @@ This Mac has no Docker runtime, so the real Supabase stack is tested on the isol
 
 ## Supabase checks
 
-The prior run exposed an Edge startup readiness check that mistook the gateway's unauthenticated response for readiness. The check now requires the function's structured authentication error across consecutive requests. A new CI run is required before this branch can be described as validated.
+The [passing GitHub Actions run](https://github.com/nathankim8/uschacks/actions/runs/43703369307) tested implementation commit `68d6e6e` on 2026-11-15. All checks passed:
 
-Required checks: real integration suite (including owner/unrelated-user isolation and setup/simulator/cleanup lifecycle), and pgTAP authorization/retention tests. Record the passing run link here when available.
+- Deno type check, lint, and formatting; 11 function tests.
+- 16 integration tests using real Supabase services, including the setup/simulator/cleanup lifecycle.
+- 40 pgTAP database authorization, validation, quota, and retention tests.
+
+The run demonstrated an authenticated synthetic report accepted by the Edge Function and persisted through PostgREST into PostgreSQL, an owner-authorized read of that persisted sighting, and an unrelated authenticated user's `404` denial. The simulator's coarse synthetic result was latitude `34.021`, longitude `-118.286`, accuracy `150` meters, and `simulated: true`. These are test coordinates, not a phone measurement. Temporary users and their cascading test data were deleted, and CI stopped its isolated services.
+
+The previous failed run exposed an Edge startup readiness check that mistook the gateway's unauthenticated response for readiness. The corrected check requires the function's structured authentication error across consecutive requests. This infrastructure issue is resolved in the passing run.
 
 ## Remaining review
 

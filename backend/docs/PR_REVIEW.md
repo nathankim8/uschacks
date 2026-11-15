@@ -39,6 +39,6 @@ See `backend/README.md` for clean setup, unit/type/lint checks, real Supabase in
 - [ ] Human approval of proposed contract (`contract-change`).
 - [ ] Firmware/mobile agreement on the BLE payload.
 - [x] Local function tests/type/lint pass (11 function tests; see verification record).
-- [ ] Real Supabase integration and SQL tests pass in CI.
+- [x] Real Supabase integration and SQL tests pass in CI (16 integration and 40 pgTAP checks; see verification record).
 - [ ] Summary reviewed before merge; no merge performed by this task.
 - [ ] Real BLE scan → phone location → authorized owner retrieval demonstrated before claiming live tracking.
