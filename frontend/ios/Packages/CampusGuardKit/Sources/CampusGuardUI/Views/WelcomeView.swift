@@ -91,7 +91,7 @@ struct WelcomeView: View {
         VStack(spacing: 0) {
             ShieldFill(progress: progress)
                 .frame(width: 240, height: 240)
-                .padding(.top, 48)
+                .padding(.top, 110)
                 .animation(.linear(duration: 0.15), value: progress)
             Spacer()
             Group {
@@ -115,7 +115,7 @@ struct WelcomeView: View {
                 } else {
                     VStack(spacing: 4) {
                         Text(step == .done ? "Setup complete" : "Connecting…")
-                            .font(CG.display(26, weight: .regular))
+                            .font(CG.sans(24, .medium))
                             .foregroundStyle(CG.cardinal)
                             .contentTransition(.opacity)
                         Text("\(Int(progress * 100))%").font(CG.sans(12)).foregroundStyle(CG.muted).monospacedDigit()
