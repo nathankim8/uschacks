@@ -133,6 +133,7 @@ private struct RecoverPage: View {
     @Environment(AppModel.self) private var model
     var go: (Incident.Page) -> Void
     @State private var ringing = false
+    @State private var showAllSightings = false
     @State private var camera: MapCameraPosition = .automatic
     @State private var selection: String?
 
@@ -188,9 +189,25 @@ private struct RecoverPage: View {
                          : "No sightings yet. Alert pins show where your phone was when an alarm arrived.")
                         .font(CG.sans(13)).foregroundStyle(CG.muted).padding(.top, 12)
                 } else {
-                    VStack(spacing: 2) {
-                        ForEach(Array(pts.prefix(12).enumerated()), id: \.element.id) { i, p in
+                    // Latest four by default; "Show all" expands to the full list (capped at 30).
+                    let shown = showAllSightings ? Array(pts.prefix(30)) : Array(pts.prefix(4))
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(Array(shown.enumerated()), id: \.element.id) { i, p in
                             sightingRow(p, emphasized: i < 2)
+                        }
+                        if pts.count > 4 {
+                            Button {
+                                withAnimation(.snappy) { showAllSightings.toggle() }
+                            } label: {
+                                Label(showAllSightings ? "Show less" : "Show all \(min(pts.count, 30))",
+                                      systemImage: showAllSightings ? "chevron.up" : "chevron.down")
+                                    .font(CG.sans(13, .semibold))
+                                    .foregroundStyle(CG.cardinal)
+                                    .padding(.vertical, 8)
+                                    .contentShape(.rect)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityHint(showAllSightings ? "Shows only the latest four sightings" : "Shows every sighting")
                         }
                     }
                     .padding(.top, 12)
