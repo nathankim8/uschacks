@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "campus-guard-gateway",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": { "enabled": true },
+  "vars": {
+    "TAG_ALIAS": "tag",
+    "NTFY_SERVER": "https://ntfy.sh"
+  },
+  // Secrets (never in this file): APP_TOKEN, INGEST_TOKEN, NTFY_TOPIC, optional NTFY_TOKEN.
+  "kv_namespaces": [
+    { "binding": "LOCATIONS", "id": "94623189c94b4a4d9f122f5217727d7d" }
+  ]
+}
