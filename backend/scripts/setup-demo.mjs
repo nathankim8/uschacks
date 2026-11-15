@@ -36,8 +36,11 @@ try {
   console.log('From backend/: node --env-file=.env.demo scripts/simulate-phone.mjs --consent');
   console.log('These are test accounts and synthetic inputs. No Bluetooth scan has occurred.');
 } catch (error) {
-  const cleanup = await Promise.allSettled(users.map((user) => deleteTestUser(config, user.id)));
-  if (cleanup.some((result) => result.status === 'rejected')) console.error('Some disposable test users could not be removed; inspect the test project Auth users.');
+  let cleanupFailures = 0;
+  for (const user of users.reverse()) {
+    try { await deleteTestUser(config, user.id); } catch { cleanupFailures += 1; }
+  }
+  if (cleanupFailures) console.error('Some disposable test users could not be removed; inspect the test project Auth users.');
   console.error(error instanceof Error ? error.message : 'Demo setup failed.');
   process.exitCode = 1;
 }

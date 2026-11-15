@@ -116,7 +116,7 @@ begin
     return greatest(1, ceil(extract(epoch from v_start + make_interval(secs => p_window_seconds) - now()))::integer);
   end if;
   return 0;
-end
+end;
 $$;
 create function private.limited(p_wait integer) returns jsonb
 language sql immutable set search_path = '' as $$
@@ -150,7 +150,7 @@ begin
     delete from private.sighting_dedup where reporter_id = v_actor;
   end if;
   return private.reply(200, jsonb_build_object('scanner', jsonb_build_object('opted_in', v_opted)));
-end
+end;
 $$;
 
 create function public.cg_register_device(p_body jsonb) returns jsonb
@@ -188,7 +188,7 @@ begin
   return private.reply(v_status, jsonb_build_object('device', jsonb_build_object(
     'id', v_device.id, 'advertisement_id', v_device.advertisement_id,
     'name', v_device.name, 'verified_at', v_device.verified_at)));
-end
+end;
 $$;
 
 create function public.cg_submit_sighting(p_body jsonb) returns jsonb
@@ -259,7 +259,7 @@ begin
     accuracy_m = excluded.accuracy_m, observed_at = excluded.observed_at, received_at = excluded.received_at
     where excluded.observed_at > private.sightings.observed_at;
   return private.reply(202, '{"accepted":true,"duplicate":false}'::jsonb);
-end
+end;
 $$;
 
 create function public.cg_last_seen(p_body jsonb) returns jsonb
@@ -286,7 +286,7 @@ begin
   where s.device_id = v_device and s.simulated = (p_body->>'simulated')::boolean
     and s.observed_at > now() - interval '24 hours';
   return private.reply(200, jsonb_build_object('device_id', v_device, 'sighting', v_sighting));
-end
+end;
 $$;
 
 -- Trusted operator only. Checking physical ownership and issuing the claim token
@@ -307,18 +307,19 @@ begin
   v_owner := (p_body->>'owner_id')::uuid;
   v_id := (p_body->>'advertisement_id')::uuid;
   if p_body ? 'enabled' then v_enabled := (p_body->>'enabled')::boolean; end if;
-  if not exists(select 1 from auth.users where id = v_owner
-    and (email_confirmed_at is not null or phone_confirmed_at is not null) and not coalesce(is_anonymous, false)
-    and (banned_until is null or banned_until <= now())) then
-    return private.failure(400, 'invalid_owner', 'Owner must be a verified, active account.');
-  end if;
-  insert into private.users(id) values(v_owner) on conflict do nothing;
   -- This advisory lock protects a not-yet-existing registry row from racing admins.
   perform pg_advisory_xact_lock(hashtextextended(v_id::text, 0));
   select * into v_existing from private.test_identifiers where advertisement_id = v_id for update;
   if found and v_existing.expected_owner_id <> v_owner then
     return private.failure(409, 'identifier_already_provisioned', 'Identifiers cannot be reassigned through the demo API.');
   end if;
+  -- Revocation of an existing tag stays possible after its owner is banned.
+  if (v_enabled or v_existing.advertisement_id is null) and not exists(select 1 from auth.users where id = v_owner
+    and (email_confirmed_at is not null or phone_confirmed_at is not null) and not coalesce(is_anonymous, false)
+    and (banned_until is null or banned_until <= now())) then
+    return private.failure(400, 'invalid_owner', 'Owner must be a verified, active account.');
+  end if;
+  insert into private.users(id) values(v_owner) on conflict do nothing;
   insert into private.test_identifiers(advertisement_id, expected_owner_id, claim_token_hash, enabled)
     values(v_id, v_owner, sha256(convert_to(p_body->>'claim_token', 'UTF8')), v_enabled)
   on conflict (advertisement_id) do update set claim_token_hash = excluded.claim_token_hash, enabled = excluded.enabled;
@@ -327,7 +328,7 @@ begin
     delete from private.sighting_dedup where device_id in (select id from private.devices where advertisement_id = v_id);
   end if;
   return private.reply(200, jsonb_build_object('advertisement_id', v_id, 'enabled', v_enabled));
-end
+end;
 $$;
 
 create function private.prune_tracking_data() returns void
@@ -336,7 +337,7 @@ begin
   delete from private.sightings where observed_at <= now() - interval '24 hours';
   delete from private.sighting_dedup where accepted_at <= now() - interval '24 hours';
   delete from private.rate_buckets where window_start <= now() - interval '48 hours';
-end
+end;
 $$;
 
 -- PostgreSQL grants EXECUTE to PUBLIC on newly created functions by default.

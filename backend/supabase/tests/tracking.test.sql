@@ -2,7 +2,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
-select plan(29);
+select plan(40);
 
 insert into auth.users(id, email, email_confirmed_at, is_anonymous) values
   ('10000000-0000-4000-8000-000000000001','cg-owner@example.invalid', now(), false),
@@ -56,11 +56,28 @@ select is((public.cg_submit_sighting((select response || '{"owner_id":"10000000-
 select is((public.cg_submit_sighting((select response || '{"advertisement_id":"20000000-0000-4000-8000-000000000002"}'::jsonb from cg_test_results where name='payload'))->>'status')::integer,
   403,'unregistered identifiers rejected');
 
+-- A late, valid report is accepted but cannot replace a newer observation.
+reset role;
+update private.sighting_dedup set accepted_at=now()-interval '31 seconds'
+  where reporter_id='10000000-0000-4000-8000-000000000002';
+set local role authenticated;
+select is((public.cg_submit_sighting((select response || jsonb_build_object(
+  'observed_at', now()-interval '1 minute', 'latitude', 10)
+  from cg_test_results where name='payload'))->>'status')::integer,202,'out-of-order report is acknowledged');
+select is((public.cg_submit_sighting((select response || jsonb_build_object(
+  'observed_at', to_char(now(), 'YYYY-MM-DD') || 'T24:00:00Z')
+  from cg_test_results where name='payload'))->>'status')::integer,400,'24-hour clock rollover is not accepted');
+select is((public.cg_submit_sighting((select response || jsonb_build_object(
+  'observed_at', '2026-02-30T12:00:00Z')
+  from cg_test_results where name='payload'))->>'status')::integer,400,'impossible calendar dates are rejected');
+select is((public.cg_submit_sighting((select response || jsonb_build_object('unused', repeat('x',5000))
+  from cg_test_results where name='payload'))->>'status')::integer,400,'oversized direct RPC payload is rejected');
+
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
 insert into cg_test_results values ('latest', public.cg_last_seen(jsonb_build_object('device_id',
   (select response#>>'{body,device,id}' from cg_test_results where name='register'), 'simulated',true)));
 select is((select (response->>'status')::integer from cg_test_results where name='latest'),200,'owner can retrieve sighting');
-select is((select response#>>'{body,sighting,latitude}' from cg_test_results where name='latest'),'34.021','latitude is coarsened before storage');
+select is((select response#>>'{body,sighting,latitude}' from cg_test_results where name='latest'),'34.021','latitude is coarsened and older report did not overwrite it');
 select is((select response#>>'{body,sighting,accuracy_m}' from cg_test_results where name='latest'),'150','response never implies exact GPS precision');
 select is((public.cg_last_seen(jsonb_build_object('device_id',
   (select response#>>'{body,device,id}' from cg_test_results where name='register'), 'simulated',false))#>'{body,sighting}'),
@@ -77,8 +94,14 @@ select is((public.cg_register_device(jsonb_build_object(
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000004',true);
 select is((public.cg_set_scanner('{"opted_in":true}'::jsonb)->>'status')::integer,401,'unverified user cannot participate');
 
+-- Consent withdrawal cannot be blocked by an exhausted toggle quota.
+reset role;
+insert into private.rate_buckets(user_id,operation,window_start,attempts)
+values('10000000-0000-4000-8000-000000000002','scanner_minute',date_trunc('minute',now()),10)
+on conflict(user_id,operation,window_start) do update set attempts=10;
+set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
-select is((public.cg_set_scanner('{"opted_in":false}'::jsonb)->>'status')::integer,200,'reporter withdraws consent');
+select is((public.cg_set_scanner('{"opted_in":false}'::jsonb)->>'status')::integer,200,'reporter withdraws consent despite exhausted toggle quota');
 reset role;
 select is((select count(*)::integer from private.sightings where reporter_id='10000000-0000-4000-8000-000000000002'),0,'optout removes reporter locations');
 select is((select count(*)::integer from private.sighting_dedup where reporter_id='10000000-0000-4000-8000-000000000002'),0,'optout removes reporter dedup metadata');
@@ -91,6 +114,43 @@ reset role;
 select ok((select sum(attempts) > 30 from private.rate_buckets
   where user_id='10000000-0000-4000-8000-000000000002' and operation='sighting_minute'),
   'rate counts survive validation failures');
+
+-- Check daily quota separately from the minute quota.
+update private.rate_buckets set attempts=1 where
+  user_id='10000000-0000-4000-8000-000000000002' and operation='sighting_minute';
+update private.rate_buckets set attempts=500 where
+  user_id='10000000-0000-4000-8000-000000000002' and operation='sighting_day';
+set local role authenticated;
+insert into cg_test_results values('daily',public.cg_submit_sighting('{}'::jsonb));
+select is((select (response->>'status')::integer from cg_test_results where name='daily'),429,'daily quota applies independently');
+select ok((select (response#>>'{body,retry_after_seconds}')::integer between 1 and 86400
+  from cg_test_results where name='daily'),'daily quota returns a bounded retry delay');
+reset role;
+
+-- Hide expired data immediately, even if scheduled cleanup has not run yet.
+insert into private.sightings(device_id,simulated,reporter_id,latitude,longitude,accuracy_m,observed_at)
+values((select (response#>>'{body,device,id}')::uuid from cg_test_results where name='register'),
+  true,'10000000-0000-4000-8000-000000000002',34.021,-118.286,150,now()-interval '25 hours');
+insert into private.sighting_dedup(reporter_id,device_id,simulated,accepted_at)
+values('10000000-0000-4000-8000-000000000002',
+  (select (response#>>'{body,device,id}')::uuid from cg_test_results where name='register'),true,now()-interval '25 hours');
+insert into private.rate_buckets(user_id,operation,window_start,attempts)
+values('10000000-0000-4000-8000-000000000002','expired_test',now()-interval '49 hours',1);
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select is((public.cg_last_seen(jsonb_build_object('device_id',
+  (select response#>>'{body,device,id}' from cg_test_results where name='register'), 'simulated',true))#>'{body,sighting}'),
+  'null'::jsonb,'expired location is invisible before cleanup');
+reset role;
+select private.prune_tracking_data();
+select is((select count(*)::integer from private.sightings
+  where reporter_id='10000000-0000-4000-8000-000000000002'),0,'cleanup physically removes expired locations');
+select is((select count(*)::integer from private.sighting_dedup
+  where reporter_id='10000000-0000-4000-8000-000000000002'),0,'cleanup removes expired dedup metadata');
+select is((select count(*)::integer from private.rate_buckets
+  where user_id='10000000-0000-4000-8000-000000000002' and operation='expired_test'),0,'cleanup removes expired rate metadata');
+select ok(exists(select 1 from cron.job where jobname='campus-guard-retention'
+  and schedule='*/15 * * * *' and active),'retention cron job is scheduled and enabled');
 
 select * from finish();
 rollback;

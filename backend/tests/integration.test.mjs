@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import { parseEnv, promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
+import { access, readFile, stat } from 'node:fs/promises';
 import test from 'node:test';
 import {
   configuration, createTestUser, deleteTestUser, edge, expectStatus,
@@ -20,14 +21,19 @@ test('Supabase: simulated sighting is persisted and only its verified owner can 
     return value;
   }
   t.after(async () => {
-    const results = await Promise.allSettled(users.reverse().map((created) => deleteTestUser(config, created.id)));
-    assert.equal(results.filter((result) => result.status === 'rejected').length, 0, 'Disposable Auth user cleanup failed.');
+    let failures = 0;
+    // Delete reporters before the owner, with no competing cascade transactions.
+    for (const created of users.reverse()) {
+      try { await deleteTestUser(config, created.id); } catch { failures += 1; }
+    }
+    assert.equal(failures, 0, 'Disposable Auth user cleanup failed.');
   });
   const owner = await user('owner');
   const reporter = await user('reporter');
   const unrelated = await user('unrelated');
   const olderReporter = await user('older-reporter');
   const rateReporter = await user('rate-reporter');
+  const concurrentReporter = await user('concurrent-reporter');
   const tag = await provisionTestDevice(config, owner.id);
   const registration = { advertisement_id: tag.advertisementId, claim_token: tag.claimToken, name: 'SIMULATED integration tag' };
   let device;
@@ -53,6 +59,9 @@ test('Supabase: simulated sighting is persisted and only its verified owner can 
       method: 'POST', token: owner.token, body: registration,
     }), 200, 'Retrying registration');
     assert.equal(repeated.device.id, device.id);
+    assert.equal((await edge(config, '/devices', {
+      method: 'POST', token: owner.token, body: { ...registration, owner_id: unrelated.id },
+    })).status, 400, 'A request cannot inject its own ownership identity.');
   });
 
   await t.test('a new registered device has no synthetic location', async () => {
@@ -195,6 +204,27 @@ test('Supabase: simulated sighting is persisted and only its verified owner can 
     assert.ok(Number(limited.headers.get('Retry-After')) > 0);
   });
 
+  await t.test('parallel duplicate reports produce exactly one accepted write', async () => {
+    const concurrentTag = await provisionTestDevice(config, owner.id);
+    const registered = expectStatus(await edge(config, '/devices', {
+      method: 'POST', token: owner.token,
+      body: { advertisement_id: concurrentTag.advertisementId, claim_token: concurrentTag.claimToken, name: 'SIMULATED concurrency test' },
+    }), 201, 'Registering concurrency test device');
+    expectStatus(await edge(config, '/scanner-consent', {
+      method: 'POST', token: concurrentReporter.token, body: { opted_in: true },
+    }), 200, 'Opting concurrency reporter in');
+    const payload = simulatedSighting(concurrentTag.advertisementId);
+    const results = await Promise.all(Array.from({ length: 6 }, () => edge(config, '/sightings', {
+      method: 'POST', token: concurrentReporter.token, body: payload,
+    })));
+    assert.equal(results.filter((result) => result.status === 202 && result.body.duplicate === false).length, 1);
+    assert.equal(results.filter((result) => result.status === 200 && result.body.duplicate === true).length, 5);
+    const latest = expectStatus(await edge(config, `/devices/${registered.device.id}/last-seen?simulated=true`, {
+      token: owner.token,
+    }), 200, 'Reading concurrent test sighting');
+    assert.equal(Date.parse(latest.sighting.observed_at), Date.parse(payload.observed_at));
+  });
+
   await t.test('the supplied simulator script completes the authenticated owner/outsider demonstration', async () => {
     const { stdout } = await promisify(execFile)(process.execPath, [
       fileURLToPath(new URL('../scripts/simulate-phone.mjs', import.meta.url)), '--consent',
@@ -231,6 +261,9 @@ test('Supabase: simulated sighting is persisted and only its verified owner can 
   });
 
   await t.test('operator revocation disables both reporting and owner location retrieval', async () => {
+    expectStatus(await edge(config, '/sightings', {
+      method: 'POST', token: concurrentReporter.token, body: simulatedSighting(tag.advertisementId),
+    }), 202, 'Creating sighting before operator revocation');
     const revoked = expectStatus(await rpc(config, 'cg_provision_test_device', {
       advertisement_id: tag.advertisementId,
       owner_id: owner.id,
@@ -244,5 +277,40 @@ test('Supabase: simulated sighting is persisted and only its verified owner can 
     assert.equal(rejected.status, 403);
     assert.equal(rejected.body.error.code, 'identifier_not_allowed');
     assert.equal((await edge(config, `/devices/${device.id}/last-seen?simulated=true`, { token: owner.token })).status, 404);
+    const reenabled = expectStatus(await rpc(config, 'cg_provision_test_device', {
+      advertisement_id: tag.advertisementId, owner_id: owner.id, claim_token: tag.claimToken, enabled: true,
+    }, { admin: true }), 200, 'Re-enabling test identifier to check deletion');
+    assert.equal(reenabled.status, 200);
+    const empty = expectStatus(await edge(config, `/devices/${device.id}/last-seen?simulated=true`, { token: owner.token }), 200, 'Verifying revocation deleted the stored sighting');
+    assert.equal(empty.sighting, null);
+  });
+
+  await t.test('demo setup, simulator, and cleanup scripts complete their full lifecycle', async () => {
+    const demoFile = new URL('../.env.demo', import.meta.url);
+    try {
+      await access(demoFile);
+      assert.fail('backend/.env.demo already exists. Clean up that demo before running this integration suite; it will not be overwritten or deleted.');
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+    const env = { ...process.env, SUPABASE_URL: config.url, SUPABASE_PUBLISHABLE_KEY: config.key, SUPABASE_SECRET_KEY: config.secret };
+    const run = (name, childEnv, args = []) => promisify(execFile)(process.execPath, [
+      fileURLToPath(new URL(`../scripts/${name}.mjs`, import.meta.url)), ...args,
+    ], { env: childEnv, timeout: 60_000 });
+    await run('setup-demo', env);
+    const demo = parseEnv(await readFile(demoFile, 'utf8'));
+    try {
+      assert.equal((await stat(demoFile)).mode & 0o777, 0o600);
+      assert.equal(demo.DEMO_CREATED_BY, 'campus-guard-simulator-v1');
+      assert.equal(Object.hasOwn(demo, 'SUPABASE_SECRET_KEY'), false);
+      const { stdout } = await run('simulate-phone', { ...env, ...demo }, ['--consent']);
+      assert.match(stdout, /Unrelated authenticated user denied \(404\)/);
+    } finally {
+      await run('cleanup-demo', { ...env, ...demo });
+    }
+    await assert.rejects(access(demoFile), { code: 'ENOENT' });
+    for (const id of [demo.DEMO_OWNER_USER_ID, demo.DEMO_REPORTER_USER_ID, demo.DEMO_UNRELATED_USER_ID]) {
+      assert.equal((await request(config, `/auth/v1/admin/users/${id}`, { admin: true })).status, 404);
+    }
   });
 });

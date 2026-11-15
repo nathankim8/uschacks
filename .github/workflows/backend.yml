@@ -47,17 +47,33 @@ jobs:
       - name: Serve Edge Function and wait for authenticated boundary
         run: |
           npx supabase functions serve campus-guard > "$RUNNER_TEMP/campus-guard-edge.log" 2>&1 &
-          for attempt in $(seq 1 60); do
-            status=$(curl -s -o /dev/null -w '%{http_code}' "$SUPABASE_URL/functions/v1/campus-guard/sightings" || true)
-            if [ "$status" = 401 ]; then exit 0; fi
-            sleep 2
-          done
-          echo 'Edge Function did not become ready.'
-          exit 1
+          node --input-type=module <<'NODE'
+          import { setTimeout } from 'node:timers/promises';
+          let consecutiveReady = 0;
+          for (let attempt = 0; attempt < 60; attempt++) {
+            try {
+              const response = await fetch(`${process.env.SUPABASE_URL}/functions/v1/campus-guard/sightings`, {
+                headers: { apikey: process.env.SUPABASE_PUBLISHABLE_KEY },
+                signal: AbortSignal.timeout(3000),
+              });
+              const body = await response.json();
+              // Kong can return401 before the function is running. Require the
+              // handler's own response, and allow functions serve to finish restart.
+              consecutiveReady = response.status === 401 && body.error?.code === 'unauthorized'
+                ? consecutiveReady + 1 : 0;
+              if (consecutiveReady >= 3) process.exit(0);
+            } catch { consecutiveReady = 0; }
+            await setTimeout(2000);
+          }
+          throw new Error('Edge Function did not become ready.');
+          NODE
       - name: Verify actual Auth, Edge Function, database and owner isolation
         run: npm run test:integration
       - name: Database security and retention tests
         run: npx supabase test db
+      - name: Function startup diagnostics on failure
+        if: failure()
+        run: tail -n 100 "$RUNNER_TEMP/campus-guard-edge.log" || true
       - name: Stop isolated services
         if: always()
         run: npx supabase stop --no-backup

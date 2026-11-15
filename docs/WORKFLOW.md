@@ -40,3 +40,20 @@ _To be filled in once the stack is chosen._
 
 ## Demo smoke test
 _To be filled in from `docs/PLAN.md` → Demo script._
+
+## Backend T-01 commands (Supabase proposal)
+
+Run from `backend/`. Requires Node.js 24 and Docker for the Supabase stack.
+
+| What | Command |
+|---|---|
+| Install pinned development tools | `npm ci` |
+| Start local Supabase / apply fresh migrations | `npm start` |
+| Serve Edge Function (second terminal) | `npm run dev` |
+| Function tests | `npm test` |
+| Type check, lint, formatting | `npm run check` |
+| Real Supabase integration | `node --env-file=.env --test --test-concurrency=1 tests/integration.test.mjs` |
+| Database security/retention | `npx supabase test db` |
+| Simulated milestone | Follow `backend/README.md` → Run the first milestone |
+
+The integration contract is proposed in `backend/docs/API_PROPOSAL.md`; human approval is required before changing `docs/CONTRACTS.md`. CI runs the real Supabase tests on an isolated Docker-capable runner. Real BLE detection and phone GPS are a separate, unverified milestone tracked in `backend/docs/REAL_HARDWARE_CHECKLIST.md`.
