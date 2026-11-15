@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Optional build-time defaults (Config/Secrets.xcconfig). Users can also enter them in Settings > Connection. -->
+	<key>CGNtfyTopic</key>
+	<string>$(CG_NTFY_TOPIC)</string>
+	<key>CGNtfyServer</key>
+	<string>$(CG_NTFY_SERVER)</string>
+	<key>CGFindMyURL</key>
+	<string>$(CG_FINDMY_URL)</string>
+	<key>CGFindMyToken</key>
+	<string>$(CG_FINDMY_TOKEN)</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>When your tag raises an alarm, Campus Guard saves where your phone was, so you know where to start looking. Your tag has no GPS.</string>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.campusguard.app.refresh</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>audio</string>
+	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<!-- The Find My helper (findmy/server.py) runs on a laptop over plain HTTP on the local network. -->
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Campus Guard reads your tag's Find My locations from the helper running on your laptop.</string>
+</dict>
+</plist>

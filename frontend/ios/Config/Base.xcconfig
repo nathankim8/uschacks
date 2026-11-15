@@ -1,0 +1,15 @@
+// Shared build settings for the Campus Guard app target.
+// Personal values (team, tag topic) go in Secrets.xcconfig, which is git-ignored.
+CG_DEVELOPMENT_TEAM =
+// A free Personal Team needs its own bundle id and no Time Sensitive entitlement:
+// set CG_BUNDLE_ID = com.campusguard.app.<teamid> and CG_ENTITLEMENTS = Config/PersonalTeam.entitlements
+CG_BUNDLE_ID = com.campusguard.app
+CG_ENTITLEMENTS = Config/CampusGuard.entitlements
+CG_NTFY_TOPIC =
+CG_NTFY_SERVER =
+CG_FINDMY_URL =
+CG_FINDMY_TOKEN =
+
+#include? "Secrets.xcconfig"
+
+DEVELOPMENT_TEAM = $(CG_DEVELOPMENT_TEAM)

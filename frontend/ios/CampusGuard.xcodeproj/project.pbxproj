@@ -1,0 +1,314 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		CG0000000000000000000101 /* TagKit in Frameworks */ = {isa = PBXBuildFile; productRef = CG0000000000000000000301 /* TagKit */; };
+		CG0000000000000000000102 /* CampusGuardUI in Frameworks */ = {isa = PBXBuildFile; productRef = CG0000000000000000000302 /* CampusGuardUI */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		CG0000000000000000000201 /* CampusGuard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CampusGuard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CG0000000000000000000202 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		CG0000000000000000000203 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		CG0000000000000000000204 /* CampusGuard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CampusGuard.entitlements; sourceTree = "<group>"; };
+		CG0000000000000000000205 /* Secrets.example.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.example.xcconfig; sourceTree = "<group>"; };
+		CG0000000000000000000206 /* CampusGuardKit */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = CampusGuardKit; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		CG0000000000000000000401 /* CampusGuard */ = {isa = PBXFileSystemSynchronizedRootGroup; path = CampusGuard; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CG0000000000000000000501 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CG0000000000000000000101 /* TagKit in Frameworks */,
+				CG0000000000000000000102 /* CampusGuardUI in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		CG0000000000000000000601 = {
+			isa = PBXGroup;
+			children = (
+				CG0000000000000000000401 /* CampusGuard */,
+				CG0000000000000000000603 /* Packages */,
+				CG0000000000000000000604 /* Config */,
+				CG0000000000000000000602 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CG0000000000000000000602 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				CG0000000000000000000201 /* CampusGuard.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CG0000000000000000000603 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				CG0000000000000000000206 /* CampusGuardKit */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		CG0000000000000000000604 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				CG0000000000000000000202 /* Base.xcconfig */,
+				CG0000000000000000000205 /* Secrets.example.xcconfig */,
+				CG0000000000000000000203 /* Info.plist */,
+				CG0000000000000000000204 /* CampusGuard.entitlements */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CG0000000000000000000701 /* CampusGuard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CG0000000000000000000902 /* Build configuration list for PBXNativeTarget "CampusGuard" */;
+			buildPhases = (
+				CG0000000000000000000801 /* Sources */,
+				CG0000000000000000000501 /* Frameworks */,
+				CG0000000000000000000802 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				CG0000000000000000000401 /* CampusGuard */,
+			);
+			name = CampusGuard;
+			packageProductDependencies = (
+				CG0000000000000000000301 /* TagKit */,
+				CG0000000000000000000302 /* CampusGuardUI */,
+			);
+			productName = CampusGuard;
+			productReference = CG0000000000000000000201 /* CampusGuard.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CG0000000000000000000A01 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					CG0000000000000000000701 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = CG0000000000000000000901 /* Build configuration list for PBXProject "CampusGuard" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = CG0000000000000000000601;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				CG0000000000000000000B01 /* XCLocalSwiftPackageReference "Packages/CampusGuardKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = CG0000000000000000000602 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CG0000000000000000000701 /* CampusGuard */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CG0000000000000000000802 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		CG0000000000000000000801 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		CG0000000000000000000C01 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		CG0000000000000000000C02 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 6.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CG0000000000000000000C03 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CG0000000000000000000202 /* Base.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "$(CG_ENTITLEMENTS)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Campus Guard";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(CG_BUNDLE_ID)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		CG0000000000000000000C04 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = CG0000000000000000000202 /* Base.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "$(CG_ENTITLEMENTS)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Campus Guard";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(CG_BUNDLE_ID)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CG0000000000000000000901 /* Build configuration list for PBXProject "CampusGuard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CG0000000000000000000C01 /* Debug */,
+				CG0000000000000000000C02 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CG0000000000000000000902 /* Build configuration list for PBXNativeTarget "CampusGuard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CG0000000000000000000C03 /* Debug */,
+				CG0000000000000000000C04 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		CG0000000000000000000B01 /* XCLocalSwiftPackageReference "Packages/CampusGuardKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/CampusGuardKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CG0000000000000000000301 /* TagKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CG0000000000000000000B01 /* XCLocalSwiftPackageReference "Packages/CampusGuardKit" */;
+			productName = TagKit;
+		};
+		CG0000000000000000000302 /* CampusGuardUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CG0000000000000000000B01 /* XCLocalSwiftPackageReference "Packages/CampusGuardKit" */;
+			productName = CampusGuardUI;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = CG0000000000000000000A01 /* Project object */;
+}
