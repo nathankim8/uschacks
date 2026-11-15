@@ -15,9 +15,10 @@ struct WelcomeView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            (Text("Welcome").bold().italic() + Text(" to\nCampus\nGuard."))
-                .font(CG.display(44, weight: .regular))
-                .foregroundStyle(CG.ink)
+            DisplayTitle(lines: [Text("Welcome").font(CG.serifItalic(46, bold: true)) + Text(" to"),
+                                 Text("Campus"), Text("Guard.")], size: 46)
+                .font(CG.display(46, weight: .regular))
+                .foregroundStyle(CG.cardinal)
                 .padding(.top, 24)
                 .accessibilityAddTraits(.isHeader)
 
@@ -35,7 +36,6 @@ struct WelcomeView: View {
                 showPermissions = false
                 if model.isConfigured { startConnecting() } else { showSetup = true }
             }
-            .presentationDetents([.medium, .large])
         }
         .sheet(isPresented: $showSetup) {
             NavigationStack {
@@ -69,10 +69,10 @@ struct WelcomeView: View {
                 }
             } label: {
                 VStack(spacing: 8) {
-                    Text("Searching").font(CG.display(28, weight: .medium))
-                    Text("please keep your device\nnearby").font(.footnote).multilineTextAlignment(.center)
+                    Text("Searching").font(CG.display(28, weight: .regular))
+                    Text("please keep your device\nnearby").font(CG.sans(13)).multilineTextAlignment(.center)
                     Text("Connect")
-                        .font(.footnote.weight(.semibold))
+                        .font(CG.sans(13, .semibold))
                         .padding(.horizontal, 16).padding(.vertical, 5)
                         .overlay(Capsule().strokeBorder(CG.ink.opacity(0.6)))
                         .padding(.top, 8)
@@ -98,7 +98,7 @@ struct WelcomeView: View {
                 if case .failed(let reason) = step {
                     VStack(spacing: 12) {
                         Text("No answer from tag").font(CG.display(26, weight: .regular)).foregroundStyle(CG.cardinal)
-                        Text(reason).font(.footnote).foregroundStyle(CG.muted).multilineTextAlignment(.center)
+                        Text(reason).font(CG.sans(13)).foregroundStyle(CG.muted).multilineTextAlignment(.center)
                         HStack(spacing: 24) {
                             Button("back") { step = .search }
                                 .buttonStyle(SerifLinkStyle(size: 22))
@@ -108,9 +108,9 @@ struct WelcomeView: View {
                                 .frame(width: 150)
                         }
                         Button("Check connection settings") { showSetup = true }
-                            .font(.caption).foregroundStyle(CG.muted)
+                            .font(CG.sans(12)).foregroundStyle(CG.muted)
                         Button("Continue without the tag") { model.finishSetup(linked: false) }
-                            .font(.caption).underline().foregroundStyle(CG.muted)
+                            .font(CG.sans(12)).underline().foregroundStyle(CG.muted)
                     }
                 } else {
                     VStack(spacing: 4) {
@@ -118,7 +118,7 @@ struct WelcomeView: View {
                             .font(CG.display(26, weight: .regular))
                             .foregroundStyle(CG.cardinal)
                             .contentTransition(.opacity)
-                        Text("\(Int(progress * 100))%").font(.caption).foregroundStyle(CG.muted).monospacedDigit()
+                        Text("\(Int(progress * 100))%").font(CG.sans(12)).foregroundStyle(CG.muted).monospacedDigit()
                     }
                     .accessibilityElement(children: .combine)
                     .accessibilityValue("\(Int(progress * 100)) percent")
@@ -170,7 +170,7 @@ private struct Ripple: View {
 
     var body: some View {
         Circle()
-            .strokeBorder(CG.rose, lineWidth: 1.5)
+            .strokeBorder(Color(red: 0.788, green: 0.604, blue: 0.600), lineWidth: 1.5) // #C99A99
             .frame(width: 250, height: 250)
             .scaleEffect(on ? 1.8 : 1)
             .opacity(on ? 0 : 0.9)
@@ -182,40 +182,57 @@ private struct Ripple: View {
     }
 }
 
-/// Two plain permission steps, no "Not now" (product decision): notifications, then location.
+/// Design sheet: "Allow *location*", then "Allow *notifications*". No "Not now" (product decision).
 private struct PermissionSheet: View {
     var done: () -> Void
     @State private var step = 0
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Image(systemName: step == 0 ? "bell.badge.fill" : "location.fill")
-                .font(.system(size: 36))
-                .foregroundStyle(CG.crimson)
+        VStack(alignment: .leading, spacing: 0) {
+            Image(systemName: step == 0 ? "mappin.and.ellipse" : "bell")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(CG.cardinal)
+                .frame(width: 44, height: 44)
+                .background(Color(red: 0.965, green: 0.933, blue: 0.933), in: .circle) // #F6EEEE
                 .contentTransition(.symbolEffect(.replace))
-            Text(step == 0 ? "Alerts from your bag" : "Where alerts happen")
-                .font(CG.display(28))
+                .accessibilityHidden(true)
+
+            (Text("Allow ") + Text(step == 0 ? "location" : "notifications").font(CG.serifItalic(31, bold: true)))
+                .font(CG.display(31, weight: .regular))
+                .foregroundStyle(CG.cardinal)
+                .padding(.top, 20)
+                .accessibilityAddTraits(.isHeader)
+
             Text(step == 0
-                 ? "Your tag sends an alert when someone takes or goes through your bag. Allow notifications so they reach you."
-                 : "Your tag has no GPS. When an alert arrives, Campus Guard saves where your phone was, so you know where to start looking.")
-                .font(.callout)
-                .foregroundStyle(CG.muted)
-            Spacer()
-            Button("Continue") {
+                 ? "We pin where you were when an alert arrives, so you know where to look"
+                 : "We only send you notifications when your bag is at risk")
+                .font(CG.sans(14))
+                .lineSpacing(4)
+                .foregroundStyle(Color(red: 0.231, green: 0.208, blue: 0.208)) // #3B3535
+                .padding(.top, 12)
+
+            Spacer(minLength: 24)
+
+            Button(step == 0 ? "Continue" : "Allow notifications") {
                 Task {
                     if step == 0 {
-                        await Notifier.shared.requestAuthorization()
-                        withAnimation { step = 1 }
-                    } else {
                         LocationService.shared.requestAuthorization()
+                        withAnimation(.snappy) { step = 1 }
+                    } else {
+                        await Notifier.shared.requestAuthorization()
                         done()
                     }
                 }
             }
             .buttonStyle(PillButtonStyle())
         }
-        .padding(28)
-        .background(CG.page)
+        .padding(.horizontal, 28)
+        .padding(.top, 28)
+        .padding(.bottom, 20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .presentationDetents([.height(320)])
+        .presentationCornerRadius(28)
+        .presentationBackground(.white)
         .interactiveDismissDisabled()
     }
 }

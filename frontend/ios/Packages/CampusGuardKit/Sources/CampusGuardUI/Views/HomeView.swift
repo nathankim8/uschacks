@@ -10,15 +10,13 @@ struct HomeView: View {
         let protected = model.isProtected
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Group {
-                    if protected {
-                        Text("You’ve ") + Text("left").bold().italic() + Text("\nyour bag")
-                    } else {
-                        Text("Your bag is\n") + Text("with you").bold().italic()
-                    }
-                }
-                .font(CG.display(44, weight: .regular))
-                .foregroundStyle(CG.ink)
+                DisplayTitle(lines: protected
+                    ? [Text("You’ve ") + Text("left").font(CG.serifItalic(46, bold: true)), Text("your bag")]
+                    : [Text("Your bag is"), Text("with you").font(CG.serifItalic(46, bold: true))],
+                    size: 46)
+                .font(CG.display(46, weight: .regular))
+                .foregroundStyle(CG.cardinal)
+                .frame(minHeight: 116, alignment: .topLeading)
                 .contentTransition(.interpolate)
                 .animation(.smooth, value: protected)
                 .padding(.top, 12)
@@ -40,7 +38,7 @@ struct HomeView: View {
                 }
 
                 BagMark(protected: protected)
-                    .padding(.vertical, 48)
+                    .padding(.vertical, 28)
 
                 ModeToggle()
                 LinkStatusLine()
@@ -109,7 +107,7 @@ private struct ModeToggle: View {
                 else { Image(systemName: icon) }
                 Text(pending ? "Sending…" : title)
             }
-            .font(.subheadline.weight(.semibold))
+            .font(CG.sans(15, .semibold))
             .foregroundStyle(selected ? .white : (pending ? CG.cardinal : CG.muted))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 13)
@@ -135,10 +133,10 @@ struct LostModeCard: View {
         TimelineView(.periodic(from: .now, by: 15)) { ctx in
             VStack(alignment: .leading, spacing: 8) {
                 Label("Lost mode on", systemImage: "dot.radiowaves.left.and.right")
-                    .font(.subheadline.weight(.semibold))
+                    .font(CG.sans(15, .semibold))
                     .foregroundStyle(CG.crimson)
                 Text("The tag is broadcasting its Find My beacon with Wi-Fi off.")
-                    .font(.footnote)
+                    .font(CG.sans(13))
                     .foregroundStyle(CG.ink)
                 Group {
                     if let last = snap.lastCheckInAt { Text("Last check-in \(relative(last, ctx.date))") }
@@ -147,7 +145,7 @@ struct LostModeCard: View {
                     }
                     if snap.sirenOn { Text("Siren is on").bold().foregroundStyle(CG.crimson) }
                 }
-                .font(.caption)
+                .font(CG.sans(12))
                 .foregroundStyle(CG.muted)
             }
         }

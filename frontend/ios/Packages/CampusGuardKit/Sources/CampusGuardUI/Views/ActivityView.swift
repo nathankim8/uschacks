@@ -50,12 +50,12 @@ private struct ActivityRow: View {
                 .frame(width: 28, height: 28)
                 .background(tint.opacity(0.12), in: .circle)
             VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.subheadline.weight(.semibold))
-                Text(report.text).font(.caption).foregroundStyle(CG.muted).lineLimit(3)
+                Text(title).font(CG.sans(15, .semibold))
+                Text(report.text).font(CG.sans(12)).foregroundStyle(CG.muted).lineLimit(3)
             }
             Spacer()
             Text(report.date.formatted(date: .omitted, time: .shortened))
-                .font(.caption2).foregroundStyle(CG.muted).monospacedDigit()
+                .font(CG.sans(11)).foregroundStyle(CG.muted).monospacedDigit()
         }
         .padding(.vertical, 2)
         .accessibilityElement(children: .combine)

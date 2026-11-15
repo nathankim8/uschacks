@@ -17,7 +17,7 @@ struct LinkStatusLine: View {
                         .frame(width: 8, height: 8)
                         .symbolEffect(.pulse, isActive: model.busy)
                     Text(text)
-                        .font(.caption)
+                        .font(CG.sans(12))
                         .foregroundStyle(onDark ? .white.opacity(isError ? 1 : 0.85) : (isError ? CG.crimson : CG.muted))
                         .fontWeight(isError && onDark ? .semibold : .regular)
                         .contentTransition(.opacity)
@@ -85,74 +85,135 @@ func relative(_ date: Date, _ now: Date = .now) -> String {
     return date.formatted(.relative(presentation: .named, unitsStyle: .abbreviated))
 }
 
-/// Top control on the red/white screens: arrows, two page dots and the swipe hint.
+/// Top control on the red/white screens: arrows, two page dots and the swipe hint (design).
 struct ViewSwitch: View {
     var page: Incident.Page
     var onDark: Bool
     var go: (Incident.Page) -> Void
 
     var body: some View {
-        HStack {
-            arrow("chevron.left", target: .red, label: "Active alarm")
-            Spacer()
+        HStack(spacing: 12) {
+            arrow("chevron.left", target: .red, label: "Red alarm with sound")
+            Spacer(minLength: 0)
             VStack(spacing: 6) {
                 HStack(spacing: 6) {
-                    dot(on: page == .red)
-                    dot(on: page == .white)
+                    dot(on: page == .red, first: true)
+                    dot(on: page == .white, first: false)
                 }
-                Text("swipe")
-                    .font(.caption2)
-                    .textCase(.uppercase)
-                    .tracking(1.5)
-                    .opacity(0.7)
+                Text(page == .red ? "Swipe left for quiet tracking" : "Swipe right for sound alarm")
+                    .font(CG.sans(11))
+                    .tracking(0.3)
+                    .foregroundStyle(onDark ? Color.white.opacity(0.8) : CG.muted)
             }
             .accessibilityHidden(true)
-            Spacer()
-            arrow("chevron.right", target: .white, label: "Quiet tracking")
+            Spacer(minLength: 0)
+            arrow("chevron.right", target: .white, label: "Quiet white tracking")
         }
-        .foregroundStyle(onDark ? .white : CG.ink)
     }
 
-    private func dot(on: Bool) -> some View {
-        Capsule()
-            .fill(onDark ? Color.white : CG.cardinal)
-            .opacity(on ? 1 : 0.3)
-            .frame(width: on ? 18 : 7, height: 7)
+    private func dot(on: Bool, first: Bool) -> some View {
+        let color: Color = onDark
+            ? (on ? .white : .white.opacity(0.4))
+            : (on ? CG.cardinal : Color(red: 0.851, green: 0.647, blue: 0.647)) // #D9A5A5
+        return Capsule()
+            .fill(color)
+            .frame(width: on ? 20 : 6, height: 6)
             .animation(.snappy, value: on)
     }
 
     private func arrow(_ symbol: String, target: Incident.Page, label: String) -> some View {
         Button { go(target) } label: {
             Image(systemName: symbol)
-                .font(.body.weight(.semibold))
-                .frame(width: 44, height: 44)
-                .overlay(Circle().strokeBorder(.foreground.opacity(0.5)))
+                .font(.system(size: 17, weight: .medium))
+                .foregroundStyle(onDark ? Color.white : CG.cardinal)
+                .frame(width: 40, height: 40)
+                .overlay(Circle().strokeBorder(onDark ? Color.white.opacity(0.4) : Color(red: 0.894, green: 0.863, blue: 0.855))) // #E4DCDA
+                .contentShape(.circle)
         }
         .buttonStyle(.plain)
         .disabled(page == target)
-        .opacity(page == target ? 0.35 : 1)
+        .opacity(page == target ? 0.25 : 1)
         .accessibilityLabel(label)
     }
 }
 
-/// The bag on Home: calm outline in Normal, filled cardinal with a shield badge in Alert.
+/// The bag on Home, drawn from the design's SVG (viewBox 240×200): rings, a backpack with its
+/// tag, and sound waves from the tag in Alert. Decorative only: no distance, no location.
 struct BagMark: View {
     var protected: Bool
 
     var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            Image(systemName: protected ? "backpack.fill" : "backpack")
-                .font(.system(size: 120, weight: .light))
-                .foregroundStyle(protected ? CG.cardinal : CG.rose)
-                .contentTransition(.symbolEffect(.replace))
-            Image(systemName: protected ? "checkmark.shield.fill" : "shield.slash")
-                .font(.system(size: 34))
-                .foregroundStyle(protected ? CG.crimson : CG.muted)
-                .background(Circle().fill(CG.page).padding(-6))
-                .offset(x: 14, y: 6)
-                .contentTransition(.symbolEffect(.replace))
+        Canvas { ctx, size in
+            let k = min(size.width / 240, size.height / 200)
+            ctx.translateBy(x: (size.width - 240 * k) / 2, y: (size.height - 200 * k) / 2)
+            ctx.scaleBy(x: k, y: k)
+            let ink = CG.cardinal
+            let ringColor = Color(red: 0.925, green: 0.863, blue: 0.855) // #ECDCDA
+            func circle(_ r: CGFloat) -> Path {
+                Path(ellipseIn: CGRect(x: 120 - r, y: 104 - r, width: 2 * r, height: 2 * r))
+            }
+            ctx.stroke(circle(88), with: .color(ringColor), lineWidth: 1)
+            ctx.stroke(circle(66), with: .color(ringColor),
+                       style: StrokeStyle(lineWidth: 1, dash: protected ? [2, 6] : []))
+            ctx.fill(circle(46), with: .color(protected
+                ? Color(red: 0.984, green: 0.945, blue: 0.941)    // #FBF1F0
+                : Color(red: 0.973, green: 0.933, blue: 0.925)))  // #F8EEEC
+
+            // Handle: M104 74 c0-9 7-15 16-15 s16 6 16 15
+            var handle = Path()
+            handle.move(to: CGPoint(x: 104, y: 74))
+            handle.addCurve(to: CGPoint(x: 120, y: 59), control1: CGPoint(x: 104, y: 65), control2: CGPoint(x: 111, y: 59))
+            handle.addCurve(to: CGPoint(x: 136, y: 74), control1: CGPoint(x: 129, y: 59), control2: CGPoint(x: 136, y: 65))
+            ctx.stroke(handle, with: .color(ink), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+
+            // Body
+            let pack = Path(roundedRect: CGRect(x: 96, y: 74, width: 48, height: 62), cornerRadius: 16)
+            ctx.fill(pack, with: .color(CG.page))
+            ctx.stroke(pack, with: .color(ink), lineWidth: 2)
+
+            // Front pocket: M104 106 h32 v18 a6 6 0 0 1 -6 6 h-20 a6 6 0 0 1 -6 -6 z
+            var pocket = Path()
+            pocket.move(to: CGPoint(x: 104, y: 106))
+            pocket.addLine(to: CGPoint(x: 136, y: 106))
+            pocket.addLine(to: CGPoint(x: 136, y: 124))
+            pocket.addArc(tangent1End: CGPoint(x: 136, y: 130), tangent2End: CGPoint(x: 130, y: 130), radius: 6)
+            pocket.addLine(to: CGPoint(x: 110, y: 130))
+            pocket.addArc(tangent1End: CGPoint(x: 104, y: 130), tangent2End: CGPoint(x: 104, y: 124), radius: 6)
+            pocket.closeSubpath()
+            ctx.stroke(pocket, with: .color(ink), lineWidth: 1.6)
+            var seam = Path()
+            seam.move(to: CGPoint(x: 104, y: 116))
+            seam.addLine(to: CGPoint(x: 136, y: 116))
+            ctx.stroke(seam, with: .color(ink), lineWidth: 1.2)
+
+            // Strap to the tag
+            var strap = Path()
+            strap.move(to: CGPoint(x: 144, y: 86))
+            strap.addLine(to: CGPoint(x: 156, y: 92))
+            ctx.stroke(strap, with: .color(ink), lineWidth: 1.4)
+
+            // Tag, rotated 18° about (159, 98); filled in Alert
+            let tagShape = Path(roundedRect: CGRect(x: 152, y: 88, width: 14, height: 20), cornerRadius: 4)
+                .applying(CGAffineTransform(translationX: -159, y: -98)
+                    .concatenating(CGAffineTransform(rotationAngle: 18 * .pi / 180))
+                    .concatenating(CGAffineTransform(translationX: 159, y: 98)))
+            ctx.fill(tagShape, with: .color(protected ? ink : CG.page))
+            ctx.stroke(tagShape, with: .color(ink), lineWidth: 1.6)
+
+            if protected {
+                // Sound waves: M178 82 c5 5 5 13 0 18 · M186 76 c8 9 8 21 0 30
+                var waves = Path()
+                waves.move(to: CGPoint(x: 178, y: 82))
+                waves.addCurve(to: CGPoint(x: 178, y: 100), control1: CGPoint(x: 183, y: 87), control2: CGPoint(x: 183, y: 95))
+                waves.move(to: CGPoint(x: 186, y: 76))
+                waves.addCurve(to: CGPoint(x: 186, y: 106), control1: CGPoint(x: 194, y: 85), control2: CGPoint(x: 194, y: 97))
+                ctx.stroke(waves, with: .color(ink.opacity(0.55)), style: StrokeStyle(lineWidth: 1.4, lineCap: .round))
+            }
         }
+        .aspectRatio(240 / 200, contentMode: .fit)
+        .frame(maxWidth: 340)
         .frame(maxWidth: .infinity)
+        .animation(.smooth, value: protected)
         .accessibilityElement()
         .accessibilityLabel(protected ? "Bag protected" : "Bag not protected")
     }
@@ -194,7 +255,7 @@ struct BannerView: View {
             Image(systemName: icon)
                 .foregroundStyle(tint)
             Text(banner.text)
-                .font(.footnote)
+                .font(CG.sans(13))
                 .foregroundStyle(CG.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button(action: dismiss) {

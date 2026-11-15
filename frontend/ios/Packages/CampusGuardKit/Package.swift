@@ -12,7 +12,8 @@ let package = Package(
     ],
     targets: [
         .target(name: "TagKit"),
-        .target(name: "CampusGuardUI", dependencies: ["TagKit"]),
+        // Fonts from the design: Charis SIL (display) and DM Sans (text), both SIL OFL 1.1.
+        .target(name: "CampusGuardUI", dependencies: ["TagKit"], resources: [.process("Resources/Fonts")]),
         .testTarget(name: "TagKitTests", dependencies: ["TagKit"]),
     ],
     swiftLanguageModes: [.v6]
