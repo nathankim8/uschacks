@@ -19,7 +19,7 @@ struct WelcomeView: View {
                                  Text("Campus"), Text("Guard.")], size: 46)
                 .font(CG.display(46, weight: .regular))
                 .foregroundStyle(CG.cardinal)
-                .padding(.top, 24)
+                .padding(.top, 60)
                 .accessibilityAddTraits(.isHeader)
 
             switch step {

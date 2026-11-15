@@ -28,7 +28,10 @@ struct IncidentView: View {
         }
         .ignoresSafeArea(edges: .horizontal)
         .background(LinearGradient(colors: [CG.alarm, CG.alarm, CG.page, CG.page], startPoint: .leading, endPoint: .trailing).ignoresSafeArea())
-        .onAppear { page = model.incident?.page ?? .red }
+        .onAppear {
+            page = model.incident?.page ?? .red
+            if page == .red { model.show(.red) }   // the red page sounds on its own
+        }
         .onChange(of: model.incident?.page) { _, new in
             if let new, new != page { withAnimation(.smooth) { page = new } }
         }
@@ -62,26 +65,26 @@ private struct AlarmPage: View {
         let disarming = model.link.pending?.command == .disarm
         VStack(alignment: .leading, spacing: 0) {
             ViewSwitch(page: .red, onDark: true, go: go)
-            DisplayTitle(lines: lost ? [Text("Device"), Text("lost")] : [Text("Motion"), Text("detected")], size: 48)
+            DisplayTitle(lines: lost ? [Text("Device lost")] : [Text("Motion"), Text("detected")], size: 48)
                 .font(CG.display(48))
                 .shadow(color: Color(red: 0.24, green: 0, blue: 0).opacity(0.35), radius: 1.5, y: 2)
                 .padding(.top, 32)
                 .accessibilityAddTraits(.isHeader)
 
             Button {
-                bellPressed = true
-                model.togglePhoneSiren()
+                bellPressed.toggle()
+                Task { await model.toggleTagSiren() }
             } label: {
                 ZStack {
                     Circle().fill(CG.alarmRing).shadow(color: .black.opacity(0.25), radius: 16, y: 6)
                     Circle().fill(CG.alarmBright).padding(36)
-                        .phaseAnimator([false, true], trigger: model.phoneSirenOn) { content, on in
-                            content.scaleEffect(model.phoneSirenOn && on ? 1.04 : 1)
+                        .phaseAnimator([false, true], trigger: model.bellActive) { content, on in
+                            content.scaleEffect(model.bellActive && on ? 1.04 : 1)
                         } animation: { _ in .easeInOut(duration: 0.5) }
-                    Image(systemName: model.phoneSirenOn ? "bell.and.waves.left.and.right.fill" : "bell")
+                    Image(systemName: model.bellActive ? "bell.and.waves.left.and.right.fill" : "bell")
                         .font(.system(size: 72, weight: .light))
                         .foregroundStyle(Color(red: 0.63, green: 0.07, blue: 0.10))
-                        .symbolEffect(.wiggle, options: .repeating, isActive: model.phoneSirenOn)
+                        .symbolEffect(.wiggle, options: .repeating, isActive: model.bellActive)
                         .contentTransition(.symbolEffect(.replace))
                 }
                 .frame(maxWidth: 320)
@@ -90,7 +93,7 @@ private struct AlarmPage: View {
             }
             .buttonStyle(.plain)
             .padding(.top, 32)
-            .accessibilityLabel(model.phoneSirenOn ? "Mute phone alarm" : "Play alarm on this phone")
+            .accessibilityLabel(model.bellActive ? "Stop the siren on your bag" : "Sound the siren on your bag")
             .sensoryFeedback(.impact(weight: .heavy), trigger: bellPressed)
 
             Spacer(minLength: 24)
@@ -160,7 +163,7 @@ private struct RecoverPage: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 ViewSwitch(page: .white, onDark: false, go: go)
-                DisplayTitle(lines: lost ? [Text("Device"), Text("lost")] : [Text("Motion"), Text("Detected")], size: 48)
+                DisplayTitle(lines: lost ? [Text("Device lost")] : [Text("Motion"), Text("Detected")], size: 48)
                     .font(CG.display(48))
                     .foregroundStyle(CG.cardinal)
                     .padding(.top, 32)
@@ -322,12 +325,6 @@ private struct RecoverPage: View {
             .buttonStyle(.plain)
             .foregroundStyle(CG.ink)
             .disabled(model.busy)
-            Text(model.usesTag
-                 ? (ringing ? "Sent to your tag. Listen for the siren (up to ~7 s)." : "Rings the siren on your tag.")
-                 : "Plays on this phone, not on the tag.")
-                .font(CG.sans(11))
-                .foregroundStyle(CG.muted)
-                .padding(.leading, 34)
         }
     }
 }

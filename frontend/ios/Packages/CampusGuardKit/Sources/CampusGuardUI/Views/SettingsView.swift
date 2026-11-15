@@ -49,7 +49,7 @@ struct SettingsView: View {
                         .font(CG.sans(11)).foregroundStyle(CG.muted)
                 }
 
-                section("Trojan Network") {
+                section(nil) {
                     Toggle(isOn: $model.settings.trojanNetwork) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Find My locations")
@@ -153,9 +153,9 @@ struct SettingsView: View {
         .accessibilityAddTraits(on ? [.isSelected] : [])
     }
 
-    private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+    private func section<Content: View>(_ title: String?, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(title).font(CG.sans(15, .semibold))
+            if let title { Text(title).font(CG.sans(15, .semibold)) }
             content()
         }
         .cgCard()

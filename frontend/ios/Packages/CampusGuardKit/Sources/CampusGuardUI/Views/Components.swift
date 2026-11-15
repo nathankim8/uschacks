@@ -38,6 +38,9 @@ struct LinkStatusLine: View {
                 let next = snap.nextCheckInEstimate().map { " · next check-in \(relative($0, now))" } ?? ""
                 return (CG.amber, "Queued \(label(pending.command)) for the tag's next check-in\(next)", false)
             }
+            if pending.command == .arm {
+                return (CG.amber, "Preparing for theft detection… \(secs)s", false)
+            }
             return (CG.amber, "Sending \(label(pending.command)) to tag… \(secs)s", false)
         }
         if let failure = link.lastFailure, failure != .busy {

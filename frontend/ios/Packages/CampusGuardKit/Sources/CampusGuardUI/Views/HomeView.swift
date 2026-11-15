@@ -19,7 +19,7 @@ struct HomeView: View {
                 .frame(minHeight: 116, alignment: .topLeading)
                 .contentTransition(.interpolate)
                 .animation(.smooth, value: protected)
-                .padding(.top, 12)
+                .padding(.top, 44)
                 .accessibilityAddTraits(.isHeader)
 
                 if model.mode == .alarm {
@@ -105,7 +105,7 @@ private struct ModeToggle: View {
             HStack(spacing: 8) {
                 if pending { ProgressView().controlSize(.small).tint(CG.cardinal) }
                 else { Image(systemName: icon) }
-                Text(pending ? "Sending…" : title)
+                Text(pending ? (title == "Alert" ? "Preparing…" : "Sending…") : title)
             }
             .font(CG.sans(15, .semibold))
             .foregroundStyle(selected ? .white : (pending ? CG.cardinal : CG.muted))

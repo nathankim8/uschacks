@@ -233,7 +233,6 @@ public final class AppModel {
                                 ? "Someone is taking or going through your bag. Open to sound the alarm on your phone."
                                 : "Someone is taking or going through your bag! The tag's siren is on.",
                              kind: .alarm, id: "alarm-\(report.id)")
-        if settings.trigger == .automatic && settings.phoneSound { startPhoneSiren() }
         Task { await dropPin(at: report.date) }
     }
 
@@ -255,15 +254,22 @@ public final class AppModel {
         } else {
             incident = Incident(reason: reason, startedAt: Date(), page: page)
         }
+        if page == .red { soundRedPage() }
     }
 
     public func show(_ page: Incident.Page) {
         incident?.page = page
-        if page == .white { stopPhoneSiren() }
+        if page == .white { stopPhoneSiren() } else { soundRedPage() }
+    }
+
+    /// The red page plays the phone alarm by itself (unless Settings › Alarm sound is off).
+    private func soundRedPage() {
+        if settings.phoneSound && !phoneSirenOn { startPhoneSiren() }
     }
 
     private func closeIncident() {
         stopPhoneSiren()
+        tagSirenOn = false
         incident = nil
         Notifier.shared.clearAlarms()
     }
@@ -288,6 +294,20 @@ public final class AppModel {
 
     public func togglePhoneSiren() {
         phoneSirenOn ? stopPhoneSiren() : startPhoneSiren()
+    }
+
+    /// Siren on the bag itself, from the red page's bell (SIREN / STOP).
+    public private(set) var tagSirenOn = false
+
+    /// The red page's bell is "on" while the bag's siren is (or, without a tag, the phone's).
+    public var bellActive: Bool { usesTag ? (tagSirenOn || link.snapshot.sirenOn) : phoneSirenOn }
+
+    public func toggleTagSiren() async {
+        guard usesTag else { return togglePhoneSiren() }
+        let turnOn = !bellActive
+        tagSirenOn = turnOn
+        await run(turnOn ? .siren : .stop)
+        if link.lastFailure != nil { tagSirenOn = !turnOn }   // didn't reach the tag: undo
     }
 
     // MARK: User actions
